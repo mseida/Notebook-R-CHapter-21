@@ -1,0 +1,156 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
+
+Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Cmd+Shift+Enter*. 
+
+```{r}
+plot(cars)
+```
+
+Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Cmd+Option+I*.
+
+When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Cmd+Shift+K* to preview the HTML file). 
+
+The preview shows you a rendered HTML copy of the contents of the editor. Consequently, unlike *Knit*, *Preview* does not run any R code chunks. Instead, the output of the chunk when it was last run in the editor is displayed.
+
+Chapter 21:
+
+Reducing code duplication has three main benefits:
+
+It’s easier to see the intent of your code, because your eyes are drawn to what’s different, not what stays the same.
+
+It’s easier to respond to changes in requirements. As your needs change, you only need to make changes in one place, rather than remembering to change every place that you copied-and-pasted the code.
+
+You’re likely to have fewer bugs because each line of code is used in more places.
+
+functions: reduce duplication by identifying repeated patterns of code and extract them out into independent pieces that can be easily reused and updated
+
+iteration: when you need to do the same thing to multiple inputs: repeating the same operation on different columns, or on different datasets
+
+```{r}
+library(tidyverse)
+```
+
+
+```{r}
+df <- tibble(
+  a = rnorm(10),
+  b = rnorm(10),
+  c = rnorm(10),
+  d = rnorm(10)
+)
+```
+
+```{r}
+output <- vector("double", ncol(df))  # 1. output
+for (i in seq_along(df)) {            # 2. sequence
+  output[[i]] <- median(df[[i]])      # 3. body
+}
+output
+```
+
+Every for loop has three components:
+
+The output: output <- vector("double", length(x)). A general way of creating an empty vector of given length is the vector() function. It has two arguments: the type of the vector (“logical”, “integer”, “double”, “character”, etc) and the length of the vector.
+
+The sequence: i in seq_along(df). It’s useful to think of i as a pronoun, like “it”.
+
+The body: output[[i]] <- median(df[[i]]). This is the code that does the work. 
+
+
+```{r}
+output <- vector("double", ncol(mtcars))
+names(output) <- names(mtcars)
+for (i in names(mtcars)) {
+  output[i] <- mean(mtcars[[i]])
+}
+output
+```
+
+There are four variations on the basic theme of the for loop:
+
+**Modifying an existing object, instead of creating a new object.**
+
+```{r}
+df <- tibble(
+  a = rnorm(10),
+  b = rnorm(10),
+  c = rnorm(10),
+  d = rnorm(10)
+)
+  rescale01 <- function(x) {
+  rng <- range(x, na.rm = TRUE)
+  (x - rng[1]) / (rng[2] - rng[1])
+}
+  
+  for (i in seq_along(df)) {
+  df[[i]] <- rescale01(df[[i]])
+}
+```
+
+**Looping over names or values, instead of indices.**
+Loop over the elements: for (x in xs). 
+
+Loop over the names: for (nm in names(xs)). This gives you name, which you can use to access the value with x[[nm]]. This is useful if you want to use the name in a plot title or a file name.
+
+**Handling outputs of unknown length.**
+Save the results in a list, and then combine into a single vector after the loop is done:
+Handling sequences of unknown length.
+
+
+A while loop is also more general than a for loop, because you can rewrite any for loop as a while loop, but you can’t rewrite every while loop as a for loop.
+
+If there are no names, there will be an error code or just zero iterations for the loop
+
+Dont want to copy and paste code as more room for bugs 
+
+Why use purr?
+Purrr takes care of generalising your solution to every element in the list.
+With purrr, you get lots of small pieces that you can compose together with the pipe.
+
+Purr functions:
+map() makes a list.
+map_lgl() makes a logical vector.
+map_int() makes an integer vector.
+map_dbl() makes a double vector.
+map_chr() makes a character vector.
+
+Way less work thatn a loop! And less typing!
+```{r}
+map_dbl(df, mean)
+
+map_dbl(df, median)
+
+map_dbl(df, sd)
+
+```
+
+```{r}
+map_dbl(mtcars, mean)
+map_chr(nycflights13::flights, typeof)
+length(unique(iris$Species))
+```
+
+safely() takes a function (a verb) and returns a modified version. It always returns a list with two elements:
+
+result is the original result. If there was an error, this will be NULL.
+
+error is an error object. If the operation was successful, this will be NULL.
+
+```{r}
+x <- list(1, 10, "a")
+y <- x %>% map(safely(log))
+str(y)
+```
+
+```{r}
+y <- y %>% transpose()
+str(y)
+```
+possibly() is simpler than safely() because you give it a default value to return when there is an error
+
+
